@@ -33,6 +33,10 @@ import sys
 
 csv.field_size_limit(sys.maxsize)
 
+
+# TODO: should be a parameter set somewhere? in FLAGS?
+NUM_FEATS = 10  # number of claim classes
+
 flags = tf.flags
 
 FLAGS = flags.FLAGS
@@ -412,7 +416,7 @@ class MultiLabelTextProcessor(DataProcessor):
             text_a = row[1]
             if set_type == 'test':
                 # this may be modify according to your data format
-                labels = [0, 0, 0, 0, 0, 0]
+                labels = [0] * NUM_FEATS
             else:
                 labels = [int(a) for a in row[2:]]
             examples.append(
@@ -569,7 +573,7 @@ def file_based_input_fn_builder(input_file, seq_length, is_training,
         "input_ids": tf.FixedLenFeature([seq_length], tf.int64),
         "input_mask": tf.FixedLenFeature([seq_length], tf.int64),
         "segment_ids": tf.FixedLenFeature([seq_length], tf.int64),
-        "label_ids": tf.FixedLenFeature([6], tf.int64),
+        "label_ids": tf.FixedLenFeature([NUM_FEATS], tf.int64),
         "is_real_example": tf.FixedLenFeature([], tf.int64),
     }
 

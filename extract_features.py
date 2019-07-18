@@ -27,6 +27,8 @@ import modeling
 import tokenization
 import tensorflow as tf
 
+NUM_FEATS = 10 # TODO get this from config file
+
 flags = tf.flags
 
 FLAGS = flags.FLAGS
@@ -399,7 +401,7 @@ def main(_):
           layers = collections.OrderedDict()
           layers["index"] = layer_index
           layers["values"] = [
-              round(float(x), 6) for x in layer_output[i:(i + 1)].flat
+              round(float(x), NUM_FEATS) for x in layer_output[i:(i + 1)].flat
           ]
           all_layers.append(layers)
         features = collections.OrderedDict()
