@@ -34,8 +34,8 @@ import sys
 csv.field_size_limit(sys.maxsize)
 
 
-# TODO: should be a parameter set somewhere? in FLAGS?
-NUM_FEATS = 10  # number of claim classes
+# TODO: should be a parameter set somewhere? in FLAGS? Or read class.txt and count rows?
+# NUM_FEATS = 10  # number of claim classes
 
 flags = tf.flags
 
@@ -133,6 +133,15 @@ tf.flags.DEFINE_string("master", None, "[Optional] TensorFlow master URL.")
 flags.DEFINE_integer(
     "num_tpu_cores", 8,
     "Only used if `use_tpu` is True. Total number of TPU cores to use.")
+
+
+flags.DEFINE_list("class_labels", ["0","1"],"List of class labels")
+# FLAGS.class_labels = ["prediction","personal","support"]
+FLAGS.class_labels = list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
+
+flags.DEFINE_integer("num_labels",2,"How many labels")
+FLAGS.num_labels = len(FLAGS.class_labels)
+
 
 
 class InputExample(object):
@@ -385,6 +394,8 @@ class ColaProcessor(DataProcessor):
         return examples
 
 
+
+
 class MultiLabelTextProcessor(DataProcessor):
 
     def get_train_examples(self, data_dir):
@@ -406,7 +417,8 @@ class MultiLabelTextProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
+        # return list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
+        return FLAGS.class_labels
 
     def _create_examples(self, df, set_type):
         """Creates examples for the training and dev sets."""
@@ -416,7 +428,7 @@ class MultiLabelTextProcessor(DataProcessor):
             text_a = row[1]
             if set_type == 'test':
                 # this may be modify according to your data format
-                labels = [0] * NUM_FEATS
+                labels = [0] * FLAGS.num_labels
             else:
                 labels = [int(a) for a in row[2:]]
             examples.append(
@@ -573,7 +585,7 @@ def file_based_input_fn_builder(input_file, seq_length, is_training,
         "input_ids": tf.FixedLenFeature([seq_length], tf.int64),
         "input_mask": tf.FixedLenFeature([seq_length], tf.int64),
         "segment_ids": tf.FixedLenFeature([seq_length], tf.int64),
-        "label_ids": tf.FixedLenFeature([NUM_FEATS], tf.int64),
+        "label_ids": tf.FixedLenFeature([FLAGS.num_labels], tf.int64),
         "is_real_example": tf.FixedLenFeature([], tf.int64),
     }
 
@@ -1047,7 +1059,7 @@ def main(_):
                 output_line = ",".join(
                     str(class_probability)
                     for class_probability in probabilities) + "\n"
-                writer.write(predict_examples[i].guid + ',' + output_line)
+                writer.write(str(predict_examples[i].guid) + ',' + str(output_line))
                 num_written_lines += 1
         assert num_written_lines == num_actual_predict_examples
 

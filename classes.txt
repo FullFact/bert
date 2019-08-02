@@ -1,0 +1,10 @@
+personal
+quantity
+correlation
+rules
+predictions
+voting
+opinion
+support
+other
+not_claim

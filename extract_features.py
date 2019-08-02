@@ -27,7 +27,6 @@ import modeling
 import tokenization
 import tensorflow as tf
 
-NUM_FEATS = 10 # TODO get this from config file
 
 flags = tf.flags
 
@@ -78,6 +77,13 @@ flags.DEFINE_bool(
     "If True, tf.one_hot will be used for embedding lookups, otherwise "
     "tf.nn.embedding_lookup will be used. On TPUs, this should be True "
     "since it is much faster.")
+
+flags.DEFINE_list("class_labels", ["0","1"],"List of class labels")
+# FLAGS.class_labels = ["prediction","personal","support"]
+FLAGS.class_labels = list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
+
+flags.DEFINE_integer("num_labels",2,"How many labels")
+FLAGS.num_labels = len(FLAGS.class_labels)
 
 
 class InputExample(object):
@@ -401,7 +407,7 @@ def main(_):
           layers = collections.OrderedDict()
           layers["index"] = layer_index
           layers["values"] = [
-              round(float(x), NUM_FEATS) for x in layer_output[i:(i + 1)].flat
+              round(float(x), FLAGS.num_labels) for x in layer_output[i:(i + 1)].flat
           ]
           all_layers.append(layers)
         features = collections.OrderedDict()
