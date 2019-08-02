@@ -3,6 +3,7 @@
 # test_bert.sh
 # ::::::::::::::
 
+# Need to specify trained classifier to be used based on last (=best) model created during training
 # Use a trained model to classify test data
 # First, get id of trained classifier model from checkpoint file.
 MODEL=$(sed -n 's/^model_checkpoint_path.*"\(.*\)"/\1/p' bert_output/checkpoint)
