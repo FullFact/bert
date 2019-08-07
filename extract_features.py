@@ -22,6 +22,8 @@ import codecs
 import collections
 import json
 import re
+import pandas as pd
+import os
 
 import modeling
 import tokenization
@@ -78,11 +80,10 @@ flags.DEFINE_bool(
     "tf.nn.embedding_lookup will be used. On TPUs, this should be True "
     "since it is much faster.")
 
-flags.DEFINE_list("class_labels", ["0","1"],"List of class labels")
-# FLAGS.class_labels = ["prediction","personal","support"]
+flags.DEFINE_list("class_labels", ["0", "1"], "List of class labels")
 FLAGS.class_labels = list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
 
-flags.DEFINE_integer("num_labels",2,"How many labels")
+flags.DEFINE_integer("num_labels", 2, "How many labels")
 FLAGS.num_labels = len(FLAGS.class_labels)
 
 

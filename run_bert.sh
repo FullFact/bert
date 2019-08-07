@@ -4,6 +4,7 @@
 # Train model
 
 export BERT_BASE_DIR=./multi_cased_L-12_H-768_A-12
+TRAIN_SIZE=100
 
 python run_multilabels_classifier.py \
 --task_name=multilabel \
@@ -18,5 +19,10 @@ python run_multilabels_classifier.py \
 --learning_rate=2e-5 \
 --num_train_epochs=3.0 \
 --output_dir=./bert_output/ \
---do_lower_case=False
+--do_lower_case=False \
+--num_train_rows=$TRAIN_SIZE \
+--test_out_filename="test_out_$TRAIN_SIZE.csv" \
+--do_predict=true
+
+
 
