@@ -34,53 +34,50 @@ import sys
 csv.field_size_limit(sys.maxsize)
 
 flags = tf.flags
-
 FLAGS = flags.FLAGS
 
-## Required parameters
-flags.DEFINE_string(
-    "data_dir", None,
-    "The input data dir. Should contain the .tsv files (or other data files) "
-    "for the task.")
+# Required parameters
+flags.DEFINE_string("data_dir", None,
+                    "The input data dir. Should contain the .tsv files (or other data files) "
+                    "for the task.")
 
-flags.DEFINE_string(
-    "bert_config_file", None,
-    "The config json file corresponding to the pre-trained BERT model. "
-    "This specifies the model architecture.")
+flags.DEFINE_string("bert_config_file", None,
+                    "The config json file corresponding to the pre-trained BERT model. "
+                    "This specifies the model architecture.")
 
 flags.DEFINE_string("task_name", None, "The name of the task to train.")
 
 flags.DEFINE_string("vocab_file", None,
                     "The vocabulary file that the BERT model was trained on.")
 
-flags.DEFINE_string(
-    "output_dir", None,
-    "The output directory where the model checkpoints will be written.")
+flags.DEFINE_string("output_dir", None,
+                    "The output directory where the model checkpoints will be written.")
 
-## Other parameters
+# Other parameters
+flags.DEFINE_integer("num_train_rows", None, "How many training rows to read")
 
-flags.DEFINE_string(
-    "init_checkpoint", None,
-    "Initial checkpoint (usually from a pre-trained BERT model).")
+flags.DEFINE_string("test_out_filename",
+                    "test.csv",
+                    "Filename to write prediction results to")
 
-flags.DEFINE_bool(
-    "do_lower_case", True,
-    "Whether to lower case the input text. Should be True for uncased "
-    "models and False for cased models.")
+flags.DEFINE_string("init_checkpoint", None,
+                    "Initial checkpoint (usually from a pre-trained BERT model).")
 
-flags.DEFINE_integer(
-    "max_seq_length", 128,
-    "The maximum total input sequence length after WordPiece tokenization. "
-    "Sequences longer than this will be truncated, and sequences shorter "
-    "than this will be padded.")
+flags.DEFINE_bool("do_lower_case", True,
+                  "Whether to lower case the input text. Should be True for uncased "
+                  "models and False for cased models.")
+
+flags.DEFINE_integer("max_seq_length", 128,
+                     "The maximum total input sequence length after WordPiece tokenization. "
+                     "Sequences longer than this will be truncated, and sequences shorter "
+                     "than this will be padded.")
 
 flags.DEFINE_bool("do_train", False, "Whether to run training.")
 
 flags.DEFINE_bool("do_eval", False, "Whether to run eval on the dev set.")
 
-flags.DEFINE_bool(
-    "do_predict", False,
-    "Whether to run the model in inference mode on the test set.")
+flags.DEFINE_bool("do_predict", False,
+                  "Whether to run the model in inference mode on the test set.")
 
 flags.DEFINE_integer("train_batch_size", 32, "Total batch size for training.")
 
@@ -93,10 +90,9 @@ flags.DEFINE_float("learning_rate", 5e-5, "The initial learning rate for Adam.")
 flags.DEFINE_float("num_train_epochs", 3.0,
                    "Total number of training epochs to perform.")
 
-flags.DEFINE_float(
-    "warmup_proportion", 0.1,
-    "Proportion of training to perform linear learning rate warmup for. "
-    "E.g., 0.1 = 10% of training.")
+flags.DEFINE_float("warmup_proportion", 0.1,
+                   "Proportion of training to perform linear learning rate warmup for. "
+                   "E.g., 0.1 = 10% of training.")
 
 flags.DEFINE_integer("save_checkpoints_steps", 1000,
                      "How often to save the model checkpoint.")
@@ -106,29 +102,35 @@ flags.DEFINE_integer("iterations_per_loop", 1000,
 
 flags.DEFINE_bool("use_tpu", False, "Whether to use TPU or GPU/CPU.")
 
-tf.flags.DEFINE_string(
-    "tpu_name", None,
-    "The Cloud TPU to use for training. This should be either the name "
-    "used when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 "
-    "url.")
+tf.flags.DEFINE_string("tpu_name", None,
+                       "The Cloud TPU to use for training. This should be either the name "
+                       "used when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 "
+                       "url.")
 
-tf.flags.DEFINE_string(
-    "tpu_zone", None,
-    "[Optional] GCE zone where the Cloud TPU is located in. If not "
-    "specified, we will attempt to automatically detect the GCE project from "
-    "metadata.")
+tf.flags.DEFINE_string("tpu_zone", None,
+                       "[Optional] GCE zone where the Cloud TPU is located in. If not "
+                       "specified, we will attempt to automatically detect the GCE project from "
+                       "metadata.")
 
-tf.flags.DEFINE_string(
-    "gcp_project", None,
-    "[Optional] Project name for the Cloud TPU-enabled project. If not "
-    "specified, we will attempt to automatically detect the GCE project from "
-    "metadata.")
+tf.flags.DEFINE_string("gcp_project", None,
+                       "[Optional] Project name for the Cloud TPU-enabled project. If not "
+                       "specified, we will attempt to automatically detect the GCE project from "
+                       "metadata.")
 
 tf.flags.DEFINE_string("master", None, "[Optional] TensorFlow master URL.")
 
-flags.DEFINE_integer(
-    "num_tpu_cores", 8,
-    "Only used if `use_tpu` is True. Total number of TPU cores to use.")
+flags.DEFINE_integer("num_tpu_cores", 8,
+                     "Only used if `use_tpu` is True. Total number of TPU cores to use.")
+
+
+flags.DEFINE_list("class_labels", ["0", "1"],
+                  "List of class labels. Must be same order as colums in training set.")
+FLAGS.class_labels = list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
+
+flags.DEFINE_integer("num_labels", 2, "How many labels are there?")
+FLAGS.num_labels = len(FLAGS.class_labels)
+
+
 
 
 class InputExample(object):
@@ -385,7 +387,8 @@ class MultiLabelTextProcessor(DataProcessor):
 
     def get_train_examples(self, data_dir):
         filename = 'train.csv'
-        data_df = pd.read_csv(os.path.join(data_dir, filename))
+        nrows = FLAGS.num_train_rows
+        data_df = pd.read_csv(os.path.join(data_dir, filename), nrows=nrows)
         #             data_df['comment_text'] = data_df['comment_text'].apply(cleanHtml)
         return self._create_examples(data_df, "train")
 
@@ -402,7 +405,8 @@ class MultiLabelTextProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
+        # return list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
+        return FLAGS.class_labels
 
     def _create_examples(self, df, set_type):
         """Creates examples for the training and dev sets."""
@@ -412,7 +416,7 @@ class MultiLabelTextProcessor(DataProcessor):
             text_a = row[1]
             if set_type == 'test':
                 # this may be modify according to your data format
-                labels = [0, 0, 0, 0, 0, 0]
+                labels = [0] * FLAGS.num_labels
             else:
                 labels = [int(a) for a in row[2:]]
             examples.append(
@@ -569,7 +573,7 @@ def file_based_input_fn_builder(input_file, seq_length, is_training,
         "input_ids": tf.FixedLenFeature([seq_length], tf.int64),
         "input_mask": tf.FixedLenFeature([seq_length], tf.int64),
         "segment_ids": tf.FixedLenFeature([seq_length], tf.int64),
-        "label_ids": tf.FixedLenFeature([6], tf.int64),
+        "label_ids": tf.FixedLenFeature([FLAGS.num_labels], tf.int64),
         "is_real_example": tf.FixedLenFeature([], tf.int64),
     }
 
@@ -756,7 +760,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
                 eval_dict['eval_loss'] = tf.metrics.mean(values=per_example_loss)
                 return eval_dict
 
-                ## original eval metrics
+                # original eval metrics
                 # predictions = tf.argmax(logits, axis=-1, output_type=tf.int32)
                 # accuracy = tf.metrics.accuracy(
                 #     labels=label_ids, predictions=predictions, weights=is_real_example)
@@ -856,7 +860,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
 
 def main(_):
-    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.logging.set_verbosity(tf.logging.WARN)  # was INFO
 
     processors = {
         "cola": ColaProcessor,
@@ -1032,7 +1036,7 @@ def main(_):
 
         result = estimator.predict(input_fn=predict_input_fn)
 
-        output_predict_file = os.path.join(FLAGS.output_dir, "test_results.tsv")
+        output_predict_file = os.path.join(FLAGS.output_dir, FLAGS.test_out_filename)
         with tf.gfile.GFile(output_predict_file, "w") as writer:
             num_written_lines = 0
             tf.logging.info("***** Predict results *****")
@@ -1043,7 +1047,7 @@ def main(_):
                 output_line = ",".join(
                     str(class_probability)
                     for class_probability in probabilities) + "\n"
-                writer.write(predict_examples[i].guid + ',' + output_line)
+                writer.write(str(predict_examples[i].guid) + ',' + str(output_line))
                 num_written_lines += 1
         assert num_written_lines == num_actual_predict_examples
 
