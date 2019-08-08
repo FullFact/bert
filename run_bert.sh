@@ -27,6 +27,7 @@ do
 	--do_lower_case=False \
 	--num_train_rows=$TRAIN_SIZE \
 	--test_out_filename="test_out_$TRAIN_SIZE.csv" \
-	--do_predict=true
+	--do_predict=true \
+	--predict_on_train=true
 
 done

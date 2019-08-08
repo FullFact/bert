@@ -56,6 +56,10 @@ flags.DEFINE_string("output_dir", None,
 # Other parameters
 flags.DEFINE_integer("num_train_rows", None, "How many training rows to read")
 
+flags.DEFINE_bool("predict_on_train", True,
+                  "Whether to generate predictions on the training set (instead of the test set)")
+
+
 flags.DEFINE_string("test_out_filename",
                     "test.csv",
                     "Filename to write prediction results to")
@@ -385,9 +389,9 @@ class ColaProcessor(DataProcessor):
 
 class MultiLabelTextProcessor(DataProcessor):
 
-    def get_train_examples(self, data_dir):
+    def get_train_examples(self, data_dir, nrows=None):
+        """Optionally limit training to first nrows of file"""
         filename = 'train.csv'
-        nrows = FLAGS.num_train_rows
         data_df = pd.read_csv(os.path.join(data_dir, filename), nrows=nrows)
         #             data_df['comment_text'] = data_df['comment_text'].apply(cleanHtml)
         return self._create_examples(data_df, "train")
@@ -405,7 +409,6 @@ class MultiLabelTextProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        # return list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
         return FLAGS.class_labels
 
     def _create_examples(self, df, set_type):
@@ -919,7 +922,7 @@ def main(_):
     num_train_steps = None
     num_warmup_steps = None
     if FLAGS.do_train:
-        train_examples = processor.get_train_examples(FLAGS.data_dir)
+        train_examples = processor.get_train_examples(FLAGS.data_dir, FLAGS.num_train_rows)
         num_train_steps = int(
             len(train_examples) / FLAGS.train_batch_size * FLAGS.num_train_epochs)
         num_warmup_steps = int(num_train_steps * FLAGS.warmup_proportion)
@@ -1006,7 +1009,11 @@ def main(_):
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
     if FLAGS.do_predict:
-        predict_examples = processor.get_test_examples(FLAGS.data_dir)
+        if FLAGS.predict_on_train:
+            predict_examples = processor.get_train_examples(FLAGS.data_dir, None)
+        else:
+            predict_examples = processor.get_test_examples(FLAGS.data_dir)
+
         num_actual_predict_examples = len(predict_examples)
         if FLAGS.use_tpu:
             # TPU requires a fixed batch size for all batches, therefore the number
