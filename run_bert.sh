@@ -8,8 +8,7 @@ export BERT_BASE_DIR=./multi_cased_L-12_H-768_A-12
 for TRAIN_SIZE in 100 500 1000 1500 2000 2500 3000 3500
 
 do
-	rm bert_output/checkpoint
-	rm bert_output/model.ckpt*
+	cp bert_output/checkpoint_0 bert_output/checkpoint  # reset to clean model
 
 	python run_multilabels_classifier.py \
 	--task_name=multilabel \

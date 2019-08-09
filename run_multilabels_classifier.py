@@ -38,7 +38,7 @@ FLAGS = flags.FLAGS
 
 # Required parameters
 flags.DEFINE_string("data_dir", None,
-                    "The input data dir. Should contain the .tsv files (or other data files) "
+                    "The input data dir. Should contain the .csv/.tsv files (or other data files) "
                     "for the task.")
 
 flags.DEFINE_string("bert_config_file", None,
@@ -59,9 +59,20 @@ flags.DEFINE_integer("num_train_rows", None, "How many training rows to read")
 flags.DEFINE_bool("predict_on_train", True,
                   "Whether to generate predictions on the training set (instead of the test set)")
 
+flags.DEFINE_string("train_filename",
+                    "train.csv",
+                    "Filename to read training data from. Assumed to be inside data_dir.")
+
+flags.DEFINE_string("dev_filename",
+                    "dev.csv",
+                    "Filename to read dev data from. Assumed to be inside data_dir.")
+
+flags.DEFINE_string("test_filename",
+                    "test.csv",
+                    "Filename to read test data from. Assumed to be inside data_dir.")
 
 flags.DEFINE_string("test_out_filename",
-                    "test.csv",
+                    "test_pred.csv",
                     "Filename to write prediction results to")
 
 flags.DEFINE_string("init_checkpoint", None,
@@ -76,7 +87,7 @@ flags.DEFINE_integer("max_seq_length", 128,
                      "Sequences longer than this will be truncated, and sequences shorter "
                      "than this will be padded.")
 
-flags.DEFINE_bool("do_train", False, "Whether to run training.")
+flags.DEFINE_bool("do_train", False, "Whether to run training (i.e. fine-tuning the model.")
 
 flags.DEFINE_bool("do_eval", False, "Whether to run eval on the dev set.")
 
@@ -133,8 +144,6 @@ FLAGS.class_labels = list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"
 
 flags.DEFINE_integer("num_labels", 2, "How many labels are there?")
 FLAGS.num_labels = len(FLAGS.class_labels)
-
-
 
 
 class InputExample(object):
@@ -391,20 +400,21 @@ class MultiLabelTextProcessor(DataProcessor):
 
     def get_train_examples(self, data_dir, nrows=None):
         """Optionally limit training to first nrows of file"""
-        filename = 'train.csv'
+        filename = FLAGS.train_filename
         data_df = pd.read_csv(os.path.join(data_dir, filename), nrows=nrows)
         #             data_df['comment_text'] = data_df['comment_text'].apply(cleanHtml)
         return self._create_examples(data_df, "train")
 
     def get_dev_examples(self, data_dir):
         """See base class."""
-        filename = 'val.csv'
+        filename = FLAGS.dev_filename
         data_df = pd.read_csv(os.path.join(data_dir, filename))
         #             data_df['comment_text'] = data_df['comment_text'].apply(cleanHtml)
         return self._create_examples(data_df, "dev")
 
     def get_test_examples(self, data_dir):
-        data_df = pd.read_csv(os.path.join(data_dir, 'test.csv'))
+        filename = FLAGS.test_filename
+        data_df = pd.read_csv(os.path.join(data_dir, filename))
         return self._create_examples(data_df, "test")
 
     def get_labels(self):
