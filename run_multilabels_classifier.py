@@ -1023,12 +1023,15 @@ def main(_):
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
     if FLAGS.do_predict:
+        print("-+"*120)
+        print("\n\nin do_predict\n")
         if FLAGS.predict_on_train:
             predict_examples = processor.get_train_examples(FLAGS.data_dir, None)
         else:
             predict_examples = processor.get_test_examples(FLAGS.data_dir)
 
         num_actual_predict_examples = len(predict_examples)
+        print("\n\nGot {} actual predict examples \n\n".format(num_actual_predict_examples))
         if FLAGS.use_tpu:
             # TPU requires a fixed batch size for all batches, therefore the number
             # of examples must be a multiple of the batch size, or else examples
