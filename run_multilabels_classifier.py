@@ -415,10 +415,6 @@ class MultiLabelTextProcessor(DataProcessor):
     def get_test_examples(self, data_dir):
         filename = FLAGS.test_filename
         data_df = pd.read_csv(os.path.join(data_dir, filename), header=0)
-        print("-="*60)
-        print("\n\n\ntest data in: {}".format(filename))
-        print(data_df.shape)
-        print("-="*60)
         return self._create_examples(data_df, "test")
 
     def get_labels(self):
@@ -878,6 +874,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
 def main(_):
     tf.logging.set_verbosity(tf.logging.WARN)  # was INFO
+    tf.logging.WARN("Starting everything!")
 
     processors = {
         "cola": ColaProcessor,
@@ -1023,9 +1020,6 @@ def main(_):
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
     if FLAGS.do_predict:
-        print("-+"*120)
-        print("\n\nin do_predict\n")
-        print(FLAGS.predict_on_train)
         if FLAGS.predict_on_train:
             predict_examples = processor.get_train_examples(FLAGS.data_dir, None)
         else:
@@ -1075,6 +1069,8 @@ def main(_):
                 writer.write(str(predict_examples[i].guid) + ',' + str(output_line))
                 num_written_lines += 1
         assert num_written_lines == num_actual_predict_examples
+
+    tf.logging.WARN("Finished everything!")
 
 
 if __name__ == "__main__":
