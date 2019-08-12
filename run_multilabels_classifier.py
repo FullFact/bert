@@ -56,7 +56,7 @@ flags.DEFINE_string("output_dir", None,
 # Other parameters
 flags.DEFINE_integer("num_train_rows", None, "How many training rows to read")
 
-flags.DEFINE_bool("predict_on_train", True,
+flags.DEFINE_bool("predict_on_train", False,
                   "Whether to generate predictions on the training set (instead of the test set)")
 
 flags.DEFINE_string("train_filename",
