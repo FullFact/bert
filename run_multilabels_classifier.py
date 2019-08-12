@@ -1025,6 +1025,7 @@ def main(_):
     if FLAGS.do_predict:
         print("-+"*120)
         print("\n\nin do_predict\n")
+        print(FLAGS.predict_on_train)
         if FLAGS.predict_on_train:
             predict_examples = processor.get_train_examples(FLAGS.data_dir, None)
         else:
