@@ -415,6 +415,10 @@ class MultiLabelTextProcessor(DataProcessor):
     def get_test_examples(self, data_dir):
         filename = FLAGS.test_filename
         data_df = pd.read_csv(os.path.join(data_dir, filename))
+        print("-="*60)
+        print("\n\n\ntest data in: {}".format(filename))
+        print(data_df.shape)
+        print("-="*60)
         return self._create_examples(data_df, "test")
 
     def get_labels(self):
