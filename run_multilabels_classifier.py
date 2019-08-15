@@ -873,8 +873,8 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
 
 def main(_):
-    tf.logging.set_verbosity(tf.logging.WARN)  # was INFO
-    tf.logging.WARN("Starting everything!")
+    tf.logging.set_verbosity(tf.logging.INFO)  # was INFO
+    tf.logging.warn("Starting everything!")
 
     processors = {
         "cola": ColaProcessor,
@@ -1070,7 +1070,7 @@ def main(_):
                 num_written_lines += 1
         assert num_written_lines == num_actual_predict_examples
 
-    tf.logging.WARN("Finished everything!")
+    tf.logging.warn("Finished everything!")
 
 
 if __name__ == "__main__":
