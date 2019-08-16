@@ -12,7 +12,7 @@ python extract_features.py \
   --input_file=train_all_july.csv \
   --output_file=/tmp/output_all_july.jsonl \
   --data_dir=./data \
-  --num_train_rows=10 \
+  --num_examples=10 \
   --vocab_file=$BERT_BASE_DIR/vocab.txt \
   --bert_config_file=$BERT_BASE_DIR/bert_config.json \
   --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \

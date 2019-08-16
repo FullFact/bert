@@ -44,6 +44,8 @@ flags.DEFINE_string("data_dir", None,
                     "The input data dir. Should contain the .csv/.tsv files (or other data files) "
                     "for the task.")
 
+flags.DEFINE_integer("num_examples", None, "How many training rows to read")
+
 flags.DEFINE_string(
     "bert_config_file", None,
     "The config json file corresponding to the pre-trained BERT model. "
