@@ -38,7 +38,7 @@ FLAGS = flags.FLAGS
 
 # Required parameters
 flags.DEFINE_string("data_dir", None,
-                    "The input data dir. Should contain the .tsv files (or other data files) "
+                    "The input data dir. Should contain the .csv/.tsv files (or other data files) "
                     "for the task.")
 
 flags.DEFINE_string("bert_config_file", None,
@@ -56,8 +56,23 @@ flags.DEFINE_string("output_dir", None,
 # Other parameters
 flags.DEFINE_integer("num_train_rows", None, "How many training rows to read")
 
-flags.DEFINE_string("test_out_filename",
+flags.DEFINE_bool("predict_on_train", False,
+                  "Whether to generate predictions on the training set (instead of the test set)")
+
+flags.DEFINE_string("train_filename",
+                    "train.csv",
+                    "Filename to read training data from. Assumed to be inside data_dir.")
+
+flags.DEFINE_string("dev_filename",
+                    "dev.csv",
+                    "Filename to read dev data from. Assumed to be inside data_dir.")
+
+flags.DEFINE_string("test_filename",
                     "test.csv",
+                    "Filename to read test data from. Assumed to be inside data_dir.")
+
+flags.DEFINE_string("test_out_filename",
+                    "test_pred.csv",
                     "Filename to write prediction results to")
 
 flags.DEFINE_string("init_checkpoint", None,
@@ -72,7 +87,7 @@ flags.DEFINE_integer("max_seq_length", 128,
                      "Sequences longer than this will be truncated, and sequences shorter "
                      "than this will be padded.")
 
-flags.DEFINE_bool("do_train", False, "Whether to run training.")
+flags.DEFINE_bool("do_train", False, "Whether to run training (i.e. fine-tuning the model.")
 
 flags.DEFINE_bool("do_eval", False, "Whether to run eval on the dev set.")
 
@@ -129,8 +144,6 @@ FLAGS.class_labels = list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"
 
 flags.DEFINE_integer("num_labels", 2, "How many labels are there?")
 FLAGS.num_labels = len(FLAGS.class_labels)
-
-
 
 
 class InputExample(object):
@@ -385,27 +398,27 @@ class ColaProcessor(DataProcessor):
 
 class MultiLabelTextProcessor(DataProcessor):
 
-    def get_train_examples(self, data_dir):
-        filename = 'train.csv'
-        nrows = FLAGS.num_train_rows
+    def get_train_examples(self, data_dir, nrows=None):
+        """Optionally limit training to first nrows of file"""
+        filename = FLAGS.train_filename
         data_df = pd.read_csv(os.path.join(data_dir, filename), nrows=nrows)
         #             data_df['comment_text'] = data_df['comment_text'].apply(cleanHtml)
         return self._create_examples(data_df, "train")
 
     def get_dev_examples(self, data_dir):
         """See base class."""
-        filename = 'val.csv'
+        filename = FLAGS.dev_filename
         data_df = pd.read_csv(os.path.join(data_dir, filename))
         #             data_df['comment_text'] = data_df['comment_text'].apply(cleanHtml)
         return self._create_examples(data_df, "dev")
 
     def get_test_examples(self, data_dir):
-        data_df = pd.read_csv(os.path.join(data_dir, 'test.csv'))
+        filename = FLAGS.test_filename
+        data_df = pd.read_csv(os.path.join(data_dir, filename), header=0)
         return self._create_examples(data_df, "test")
 
     def get_labels(self):
         """See base class."""
-        # return list(pd.read_csv(os.path.join(FLAGS.data_dir, "classes.txt"), header=None)[0].values)
         return FLAGS.class_labels
 
     def _create_examples(self, df, set_type):
@@ -860,7 +873,8 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
 
 def main(_):
-    tf.logging.set_verbosity(tf.logging.WARN)  # was INFO
+    tf.logging.set_verbosity(tf.logging.INFO)  # was INFO
+    tf.logging.warn("Starting everything!")
 
     processors = {
         "cola": ColaProcessor,
@@ -919,7 +933,7 @@ def main(_):
     num_train_steps = None
     num_warmup_steps = None
     if FLAGS.do_train:
-        train_examples = processor.get_train_examples(FLAGS.data_dir)
+        train_examples = processor.get_train_examples(FLAGS.data_dir, FLAGS.num_train_rows)
         num_train_steps = int(
             len(train_examples) / FLAGS.train_batch_size * FLAGS.num_train_epochs)
         num_warmup_steps = int(num_train_steps * FLAGS.warmup_proportion)
@@ -1006,8 +1020,13 @@ def main(_):
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
     if FLAGS.do_predict:
-        predict_examples = processor.get_test_examples(FLAGS.data_dir)
+        if FLAGS.predict_on_train:
+            predict_examples = processor.get_train_examples(FLAGS.data_dir, None)
+        else:
+            predict_examples = processor.get_test_examples(FLAGS.data_dir)
+
         num_actual_predict_examples = len(predict_examples)
+        print("\n\nGot {} actual predict examples \n\n".format(num_actual_predict_examples))
         if FLAGS.use_tpu:
             # TPU requires a fixed batch size for all batches, therefore the number
             # of examples must be a multiple of the batch size, or else examples
@@ -1050,6 +1069,8 @@ def main(_):
                 writer.write(str(predict_examples[i].guid) + ',' + str(output_line))
                 num_written_lines += 1
         assert num_written_lines == num_actual_predict_examples
+
+    tf.logging.warn("Finished everything!")
 
 
 if __name__ == "__main__":
