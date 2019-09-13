@@ -349,6 +349,20 @@ def read_examples(input_file):
   return examples
 
 
+def read_example_sentences(data_dir, input_file, num_examples):
+    data_df = pd.read_csv(os.path.join(data_dir, input_file), nrows=num_examples, header=0)
+    examples = []
+    print(data_df.head())
+    # unique_id = 0
+    for id, row in data_df.iterrows():
+        unique_id = row[0]
+        sentence = row[1]
+        examples.append(InputExample(unique_id=unique_id, text_a=sentence, text_b=None))
+        # unique_id += 1
+    return examples
+
+
+
 def main(_):
   tf.logging.set_verbosity(tf.logging.INFO)
 

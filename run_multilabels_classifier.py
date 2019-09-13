@@ -401,14 +401,14 @@ class MultiLabelTextProcessor(DataProcessor):
     def get_train_examples(self, data_dir, nrows=None):
         """Optionally limit training to first nrows of file"""
         filename = FLAGS.train_filename
-        data_df = pd.read_csv(os.path.join(data_dir, filename), nrows=nrows)
+        data_df = pd.read_csv(os.path.join(data_dir, filename), nrows=nrows, header=0)
         #             data_df['comment_text'] = data_df['comment_text'].apply(cleanHtml)
         return self._create_examples(data_df, "train")
 
     def get_dev_examples(self, data_dir):
         """See base class."""
         filename = FLAGS.dev_filename
-        data_df = pd.read_csv(os.path.join(data_dir, filename))
+        data_df = pd.read_csv(os.path.join(data_dir, filename), header=0)
         #             data_df['comment_text'] = data_df['comment_text'].apply(cleanHtml)
         return self._create_examples(data_df, "dev")
 
@@ -453,7 +453,12 @@ def convert_single_example(ex_index, example, label_list, max_seq_length,
     for (i, label) in enumerate(label_list):
         label_map[label] = i
 
-    tokens_a = tokenizer.tokenize(example.text_a)
+    try:
+        tokens_a = tokenizer.tokenize(example.text_a)
+    except ValueError:
+        tf.logging.warn("Failed to tokenize sentence; skipping: {}".format(example.text_a))
+        tokens_a = tokenizer.tokenize("")
+
     tokens_b = None
     if example.text_b:
         tokens_b = tokenizer.tokenize(example.text_b)
