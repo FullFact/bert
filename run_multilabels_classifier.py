@@ -453,10 +453,19 @@ def convert_single_example(ex_index, example, label_list, max_seq_length,
     for (i, label) in enumerate(label_list):
         label_map[label] = i
 
-    tokens_a = tokenizer.tokenize(example.text_a)
+    try:
+        tokens_a = tokenizer.tokenize(example.text_a)
+    except ValueError as ve:
+        tf.logging.warn("\nFailed to tokenize text '{}' : {}".format(example.text_a,ve))
+        tokens_a = tokenizer.tokenize("")
+
     tokens_b = None
     if example.text_b:
-        tokens_b = tokenizer.tokenize(example.text_b)
+        try:
+            tokens_b = tokenizer.tokenize(example.text_b)
+        except ValueError as ve:
+            tf.logging.warn("\nFailed to tokenize text-b '{}' : {}".format(example.text_b,ve))
+            tokens_b = tokenizer.tokenize("")
 
     if tokens_b:
         # Modifies `tokens_a` and `tokens_b` in place so that the total
