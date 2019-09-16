@@ -1,3 +1,8 @@
+# Experiments with BERT
+
+This fork is for use at Full Fact when experimenting with BERT.
+
+
 # Multi-labels Classification base on BERT
 
 this project is based on bert. Two features were added.
@@ -8,8 +13,8 @@ this project is based on bert. Two features were added.
 
 ## multi-labels
 
-[toxic-comment-classification](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge) data is used 
-when test multi-labels model's performance. 
+[toxic-comment-classification](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge) data is used
+when test multi-labels model's performance.
 
 performance on eval dataset(p.s. i don't adjust parameter)
 
@@ -41,7 +46,7 @@ header is not necessary in train file. But a classes.txt file needed to tell mod
 ### train
 
 in tran phase, we need to change model structure after output layer.
- 
+
 multi-classes classifier put softmax layer after output layer.
 
 for multi-labels, softmax change to sigmoid layer, and loss change to sigmoid_cross_entropy_with_logits,
@@ -52,12 +57,11 @@ you can find it in create_model() function
 eval metric change to auc of every class, tf.metrics.auc used in metric_fn()
 
 
-## model export 
+## model export
 
 original bert project only save ckpt model file, but not pb file.
 
-if you want to serving online, you need pb file. 
+if you want to serving online, you need pb file.
 
-this problem is solved in bert [issue 146](https://github.com/google-research/bert/issues/146), 
+this problem is solved in bert [issue 146](https://github.com/google-research/bert/issues/146),
 but i can't export model after do that. So i write model_exporter to export bert model.
- 
